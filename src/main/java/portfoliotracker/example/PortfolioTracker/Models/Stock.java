@@ -1,5 +1,7 @@
 package portfoliotracker.example.PortfolioTracker.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,13 +33,11 @@ public class Stock {
     private Double buyPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = true)
     private Double currentPrice;
 
-    // public Double getStockValue() {
-    //     return this.quantity * this.currentPrice;
-    // }
 }

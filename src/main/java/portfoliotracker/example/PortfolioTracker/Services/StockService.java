@@ -18,9 +18,13 @@ public class StockService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private StockPriceService stockPriceService;
+
     public Stock addStock(String email, Stock stock) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         stock.setUser(user);
+        stock.setCurrentPrice(stockPriceService.getCurrentPrice(stock.getTicker()));
         return stockRepository.save(stock);
     }
 
@@ -38,6 +42,7 @@ public class StockService {
         existingStock.setTicker(stockDetails.getTicker());
         existingStock.setQuantity(stockDetails.getQuantity());
         existingStock.setBuyPrice(stockDetails.getBuyPrice());
+        existingStock.setCurrentPrice(stockPriceService.getCurrentPrice(existingStock.getTicker()));
         return stockRepository.save(existingStock);
     }
 
@@ -47,5 +52,17 @@ public class StockService {
             throw new RuntimeException("User is not authorized to delete this stock");
         }
         stockRepository.delete(existingStock);
+    }
+
+    public double calculatePortfolioValue(String email) {
+        List<Stock> stocks = stockRepository.findByUserEmail(email);
+        double totalValue = 0.0;
+
+        for (Stock stock : stocks) {
+            double currentPrice = stockPriceService.getCurrentPrice(stock.getTicker());
+            totalValue += currentPrice * stock.getQuantity();
+        }
+
+        return totalValue;
     }
 }

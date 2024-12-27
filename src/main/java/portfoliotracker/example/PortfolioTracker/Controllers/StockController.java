@@ -49,10 +49,10 @@ public class StockController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteStock(@AuthenticationPrincipal UserDetails userDetails,
+    public ResponseEntity<String> deleteStock(@AuthenticationPrincipal UserDetails userDetails,
                                             @PathVariable Long id) {
         String email = userDetails.getUsername();
         stockService.deleteStock(id, email);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Deleted successfully");
     }
 }
