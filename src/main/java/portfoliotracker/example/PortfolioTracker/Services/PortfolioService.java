@@ -26,6 +26,7 @@ public class PortfolioService {
         Stock topStock = null;
         double topPerformance = Double.NEGATIVE_INFINITY;
         Map<String, Double> distribution = new HashMap<>();
+        Map<String, Double> profitAndLoss = new HashMap<>();
 
         for (Stock stock : stocks) {
             double currentPrice = stockPriceService.getCurrentPrice(stock.getTicker());
@@ -39,12 +40,15 @@ public class PortfolioService {
             }
 
             distribution.put(stock.getTicker(), stockValue);
+
+            double pAndL = (currentPrice - stock.getBuyPrice()) * stock.getQuantity();
+            profitAndLoss.put(stock.getTicker(), pAndL);
         }
 
         double finalTotalValue = totalValue;
 
         distribution.replaceAll((ticker, value) -> (value / finalTotalValue) * 100);
 
-        return new PortfolioDTO(totalValue, topStock, distribution);
+        return new PortfolioDTO(totalValue, topStock, distribution,profitAndLoss);
     }
 }
