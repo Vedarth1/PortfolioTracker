@@ -1,5 +1,8 @@
 package portfoliotracker.example.PortfolioTracker.Controllers;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,10 +26,12 @@ public class PortfolioController {
     private StockService stockService;
 
     @GetMapping("/value")
-    public ResponseEntity<Double> getPortfolioValue(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Map<String, Double>> getPortfolioValue(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         double totalValue = stockService.calculatePortfolioValue(email);
-        return ResponseEntity.ok(totalValue);
+        Map<String, Double> response = new HashMap<>();
+        response.put("portfolioValue", totalValue);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/dashboard")
