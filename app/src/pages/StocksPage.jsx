@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 function StocksPage() {
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [portfolioValue, setPortfolioValue] = useState(null);
-  const [dashboardData, setDashboardData] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isUpdateMode, setUpdateMode] = useState(false);
   const [currentStockId, setCurrentStockId] = useState(null);
@@ -19,46 +17,20 @@ function StocksPage() {
   });
 
   const token = localStorage.getItem('Token');
+  const navigate = useNavigate();
 
-  const fetchPortfolioValue = async () => {
-    try {
-      const response = await fetch('http://localhost:8080/api/portfolio/value', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setPortfolioValue(data.portfolioValue);
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch portfolio value');
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const fetchDashboardData = async () => {
-    try {
-      const response = await fetch('http://localhost:8080/api/portfolio/dashboard', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setDashboardData(data);
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch dashboard data');
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  const stockOptions = [
+    { name: 'Apple', ticker: 'AAPL' },
+    { name: 'Google', ticker: 'GOOGL' },
+    { name: 'Amazon', ticker: 'AMZN' },
+    { name: 'Microsoft', ticker: 'MSFT' },
+    { name: 'Tesla', ticker: 'TSLA' },
+    { name: 'NVIDIA', ticker: 'NVDA' },
+    { name: 'Meta', ticker: 'META' },
+    { name: 'Netflix', ticker: 'NFLX' },
+    { name: 'Adobe', ticker: 'ADBE' },
+    { name: 'Salesforce', ticker: 'CRM' },
+  ];
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -87,13 +59,21 @@ function StocksPage() {
     };
 
     fetchStocks();
-    fetchPortfolioValue();
-    fetchDashboardData();
   }, [token]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+
+    if (name === 'name') {
+      const selectedStock = stockOptions.find((stock) => stock.name === value);
+      setForm({
+        ...form,
+        name: value,
+        ticker: selectedStock ? selectedStock.ticker : '',
+      });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleAddOrUpdateStock = async () => {
@@ -131,30 +111,6 @@ function StocksPage() {
     }
   };
 
-  const handleDeleteStock = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this stock?')) return;
-
-    try {
-      const response = await fetch(`http://localhost:8080/api/stocks/delete/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setStocks(stocks.filter((stock) => stock.id !== id));
-        alert('Stock deleted successfully!');
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete stock');
-      }
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
   const openUpdateModal = (stock) => {
     setForm(stock);
     setCurrentStockId(stock.id);
@@ -165,81 +121,32 @@ function StocksPage() {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  const distributionData = dashboardData
-    ? Object.entries(dashboardData.distribution).map(([name, value]) => ({
-        name,
-        value,
-      }))
-    : [];
-
-  const profitAndLossData = dashboardData
-    ? Object.entries(dashboardData.profitAndLoss).map(([name, value]) => ({
-        name,
-        value,
-      }))
-    : [];
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
   return (
     <div className="stocks-page p-6">
-      <h1 className="text-3xl font-bold underline mb-6">Stocks Portfolio</h1>
-      <div className="mt-4">
-        <p className="text-lg">Portfolio Value: ${portfolioValue?.toFixed(2)}</p>
-        {dashboardData && (
-          <div className="dashboard mt-4">
-            <h2 className="text-2xl font-semibold">Dashboard</h2>
-            <p><strong>Total Value:</strong> ${dashboardData.totalValue.toFixed(2)}</p>
-            <p>
-              <strong>Top Stock:</strong> {dashboardData.topStock.name} (
-              {dashboardData.topStock.ticker}) - Quantity: {dashboardData.topStock.quantity}, 
-              Buy Price: ${dashboardData.topStock.buyPrice.toFixed(2)}, Current Price: $
-              {dashboardData.topStock.currentPrice.toFixed(2)}
-            </p>
-            <h3 className="text-xl mt-2">Distribution:</h3>
-            <PieChart width={400} height={400}>
-              <Pie
-                data={distributionData}
-                cx={200}
-                cy={200}
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(2)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {distributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
+      <h1 className="text-3xl font-bold mb-6">Stocks Portfolio</h1>
 
-            <h3 className="text-xl mt-2">Profit and Loss:</h3>
-            <BarChart width={600} height={300} data={profitAndLossData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#8884d8" />
-            </BarChart>
-          </div>
-        )}
-      </div>
+      {/* Button to Navigate to Portfolio Page */}
+      <button
+        onClick={() => navigate('/portfolio')}
+        className="bg-green-500 text-white px-4 py-2 rounded mb-4 mr-4"
+      >
+        Go to Portfolio Page
+      </button>
 
+      {/* Button to Add Stock */}
       <button
         onClick={() => {
           setForm({ ticker: '', name: '', quantity: '', buyPrice: '', currentPrice: '' });
           setUpdateMode(false);
           setModalOpen(true);
         }}
-        className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
       >
         Add Stock
       </button>
 
-      <table className="table-auto border-collapse border border-gray-300 w-full mt-5">
+      {/* Stock Table */}
+      <table className="table-auto border-collapse border border-gray-300 w-full">
         <thead>
           <tr>
             <th className="border border-gray-300 px-4 py-2">ID</th>
@@ -279,6 +186,7 @@ function StocksPage() {
         </tbody>
       </table>
 
+      {/* Modal for Add/Update Stock */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/2">
@@ -286,21 +194,26 @@ function StocksPage() {
               {isUpdateMode ? 'Update Stock' : 'Add New Stock'}
             </h2>
             <form>
+              <select
+                name="name"
+                value={form.name}
+                onChange={handleFormChange}
+                className="block w-full border border-gray-300 px-3 py-2 mb-3 rounded"
+              >
+                <option value="">Select a stock</option>
+                {stockOptions.map((stock) => (
+                  <option key={stock.ticker} value={stock.name}>
+                    {stock.name}
+                  </option>
+                ))}
+              </select>
               <input
                 type="text"
                 name="ticker"
                 placeholder="Ticker"
                 value={form.ticker}
-                onChange={handleFormChange}
-                className="block w-full border border-gray-300 px-3 py-2 mb-3 rounded"
-              />
-              <input
-                type="text"
-                name="name"
-                placeholder="Name"
-                value={form.name}
-                onChange={handleFormChange}
-                className="block w-full border border-gray-300 px-3 py-2 mb-3 rounded"
+                readOnly
+                className="block w-full border border-gray-300 px-3 py-2 mb-3 rounded bg-gray-100"
               />
               <input
                 type="number"
