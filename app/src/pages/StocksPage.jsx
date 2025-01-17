@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function StocksPage() {
   const [stocks, setStocks] = useState([]);
@@ -15,6 +17,9 @@ function StocksPage() {
     buyPrice: '',
     currentPrice: '',
   });
+  const [deletingStockId, setDeletingStockId] = useState(null);
+  const [isDeleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
+  const [isButtonLoading, setButtonLoading] = useState(false);
 
   const token = localStorage.getItem('Token');
   const navigate = useNavigate();
@@ -52,7 +57,7 @@ function StocksPage() {
           throw new Error(errorData.message || 'Failed to fetch stocks');
         }
       } catch (err) {
-        setError(err.message);
+        toast.error(err.message);
       } finally {
         setLoading(false);
       }
@@ -82,6 +87,7 @@ function StocksPage() {
       : 'http://localhost:8080/api/stocks/add';
     const method = isUpdateMode ? 'PUT' : 'POST';
 
+    setButtonLoading(true);
     try {
       const response = await fetch(url, {
         method,
@@ -96,10 +102,10 @@ function StocksPage() {
         const updatedStock = await response.json();
         if (isUpdateMode) {
           setStocks(stocks.map((stock) => (stock.id === currentStockId ? updatedStock : stock)));
-          alert('Stock updated successfully!');
+          toast.success('Stock updated successfully!');
         } else {
           setStocks([...stocks, updatedStock]);
-          alert('Stock added successfully!');
+          toast.success('Stock added successfully!');
         }
         setModalOpen(false);
       } else {
@@ -107,7 +113,34 @@ function StocksPage() {
         throw new Error(errorData.message || 'Failed to save stock');
       }
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
+    } finally {
+      setButtonLoading(false);
+    }
+  };
+
+  const handleDeleteStock = async () => {
+    setButtonLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8080/api/stocks/delete/${deletingStockId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        setStocks(stocks.filter((stock) => stock.id !== deletingStockId));
+        toast.success('Stock deleted successfully!');
+        setDeleteConfirmModalOpen(false);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete stock');
+      }
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setButtonLoading(false);
     }
   };
 
@@ -118,78 +151,84 @@ function StocksPage() {
     setModalOpen(true);
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const openDeleteConfirmModal = (stockId) => {
+    setDeletingStockId(stockId);
+    setDeleteConfirmModalOpen(true);
+  };
+
+  if (loading) return <div className="text-center py-6">Loading...</div>;
+  if (error) return <div className="text-center text-red-500 py-6">Error: {error}</div>;
 
   return (
-    <div className="stocks-page p-6">
-      <h1 className="text-3xl font-bold mb-6">Stocks Portfolio</h1>
+    <div className="stocks-page p-6 bg-gray-50 min-h-screen">
+      <ToastContainer />
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Stocks Portfolio</h1>
 
-      {/* Button to Navigate to Portfolio Page */}
-      <button
-        onClick={() => navigate('/portfolio')}
-        className="bg-green-500 text-white px-4 py-2 rounded mb-4 mr-4"
-      >
-        Go to Portfolio Page
-      </button>
-
-      {/* Button to Add Stock */}
-      <button
-        onClick={() => {
-          setForm({ ticker: '', name: '', quantity: '', buyPrice: '', currentPrice: '' });
-          setUpdateMode(false);
-          setModalOpen(true);
-        }}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-      >
-        Add Stock
-      </button>
+      {/* Button Actions */}
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={() => navigate('/portfolio')}
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+        >
+          Go to Portfolio Page
+        </button>
+        <button
+          onClick={() => {
+            setForm({ ticker: '', name: '', quantity: '', buyPrice: '', currentPrice: '' });
+            setUpdateMode(false);
+            setModalOpen(true);
+          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+        >
+          Add Stock
+        </button>
+      </div>
 
       {/* Stock Table */}
-      <table className="table-auto border-collapse border border-gray-300 w-full">
-        <thead>
-          <tr>
-            <th className="border border-gray-300 px-4 py-2">ID</th>
-            <th className="border border-gray-300 px-4 py-2">Ticker</th>
-            <th className="border border-gray-300 px-4 py-2">Name</th>
-            <th className="border border-gray-300 px-4 py-2">Quantity</th>
-            <th className="border border-gray-300 px-4 py-2">Buy Price</th>
-            <th className="border border-gray-300 px-4 py-2">Current Price</th>
-            <th className="border border-gray-300 px-4 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stocks.map((stock) => (
-            <tr key={stock.id}>
-              <td className="border border-gray-300 px-4 py-2">{stock.id}</td>
-              <td className="border border-gray-300 px-4 py-2">{stock.ticker}</td>
-              <td className="border border-gray-300 px-4 py-2">{stock.name}</td>
-              <td className="border border-gray-300 px-4 py-2">{stock.quantity}</td>
-              <td className="border border-gray-300 px-4 py-2">{stock.buyPrice}</td>
-              <td className="border border-gray-300 px-4 py-2">{stock.currentPrice}</td>
-              <td className="border border-gray-300 px-4 py-2">
-                <button
-                  onClick={() => openUpdateModal(stock)}
-                  className="bg-yellow-500 text-white px-2 py-1 rounded mr-2"
-                >
-                  Update
-                </button>
-                <button
-                  onClick={() => handleDeleteStock(stock.id)}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
-                >
-                  Delete
-                </button>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="table-auto border-collapse border border-gray-300 w-full text-left text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border border-gray-300 px-4 py-2">Ticker</th>
+              <th className="border border-gray-300 px-4 py-2">Name</th>
+              <th className="border border-gray-300 px-4 py-2">Quantity</th>
+              <th className="border border-gray-300 px-4 py-2">Buy Price</th>
+              <th className="border border-gray-300 px-4 py-2">Current Price</th>
+              <th className="border border-gray-300 px-4 py-2">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {stocks.map((stock) => (
+              <tr key={stock.id}>
+                <td className="border border-gray-300 px-4 py-2">{stock.ticker}</td>
+                <td className="border border-gray-300 px-4 py-2">{stock.name}</td>
+                <td className="border border-gray-300 px-4 py-2">{stock.quantity}</td>
+                <td className="border border-gray-300 px-4 py-2">{stock.buyPrice}</td>
+                <td className="border border-gray-300 px-4 py-2">{stock.currentPrice}</td>
+                <td className="border border-gray-300 px-4 py-2">
+                  <button
+                    onClick={() => openUpdateModal(stock)}
+                    className="bg-yellow-500 text-white px-2 py-1 rounded mr-2 hover:bg-yellow-600"
+                  >
+                    Update
+                  </button>
+                  <button
+                    onClick={() => openDeleteConfirmModal(stock.id)}
+                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Modal for Add/Update Stock */}
+      {/* Add/Update Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-1/2">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
               {isUpdateMode ? 'Update Stock' : 'Add New Stock'}
             </h2>
@@ -235,19 +274,53 @@ function StocksPage() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                  className="bg-gray-500 text-white px-4 py-2 rounded mr-2 hover:bg-gray-600"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleAddOrUpdateStock}
-                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  className={`bg-green-500 text-white px-4 py-2 rounded ${
+                    isButtonLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'
+                  }`}
+                  disabled={isButtonLoading}
                 >
-                  {isUpdateMode ? 'Update Stock' : 'Add Stock'}
+                  {isButtonLoading ? 'Saving...' : isUpdateMode ? 'Update Stock' : 'Add Stock'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteConfirmModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete this stock? This action cannot be undone.
+            </p>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmModalOpen(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded mr-2 hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteStock}
+                className={`bg-red-500 text-white px-4 py-2 rounded ${
+                  isButtonLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-600'
+                }`}
+                disabled={isButtonLoading}
+              >
+                {isButtonLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}
