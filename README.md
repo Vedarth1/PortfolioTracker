@@ -81,6 +81,8 @@ Configure the Database: Update src/main/resources/application.properties with yo
   spring.datasource.driver-class-name=org.postgresql.Driver
   springdoc.api-docs.path=/v1/api-docs
   springdoc.swagger-ui.path=/swagger-ui.html
+  spring.jpa.hibernate.ddl-auto=update
+  spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 ```
 
 Build and Run the Backend:

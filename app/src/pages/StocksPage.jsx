@@ -41,7 +41,7 @@ function StocksPage() {
     const fetchStocks = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:8080/api/stocks/portfolio', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/stocks/portfolio`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -83,8 +83,8 @@ function StocksPage() {
 
   const handleAddOrUpdateStock = async () => {
     const url = isUpdateMode
-      ? `http://localhost:8080/api/stocks/update/${currentStockId}`
-      : 'http://localhost:8080/api/stocks/add';
+      ? `${import.meta.env.VITE_API_BASE_URL}/stocks/update/${currentStockId}`
+      : `${import.meta.env.VITE_API_BASE_URL}/stocks/add`;
     const method = isUpdateMode ? 'PUT' : 'POST';
 
     setButtonLoading(true);
@@ -122,7 +122,7 @@ function StocksPage() {
   const handleDeleteStock = async () => {
     setButtonLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/stocks/delete/${deletingStockId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/stocks/delete/${deletingStockId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -164,7 +164,6 @@ function StocksPage() {
       <ToastContainer />
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Stocks Portfolio</h1>
 
-      {/* Button Actions */}
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={() => navigate('/portfolio')}
@@ -189,7 +188,6 @@ function StocksPage() {
         </button>
       </div>
 
-      {/* Stock Table */}
       <div className="overflow-x-auto">
         <table className="table-auto border-collapse border border-gray-300 w-full text-left text-sm">
           <thead className="bg-gray-100">
@@ -230,7 +228,6 @@ function StocksPage() {
         </table>
       </div>
 
-      {/* Add/Update Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -299,7 +296,6 @@ function StocksPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {isDeleteConfirmModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">

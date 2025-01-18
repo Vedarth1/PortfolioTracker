@@ -16,7 +16,7 @@ function PortfolioPage() {
     const fetchPortfolioData = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:8080/api/portfolio/dashboard', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/portfolio/dashboard`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
