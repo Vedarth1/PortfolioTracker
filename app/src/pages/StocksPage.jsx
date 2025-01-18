@@ -168,7 +168,12 @@ function StocksPage() {
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={() => navigate('/portfolio')}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+          className={`px-4 py-2 rounded transition ${
+            stocks.length > 0
+              ? 'bg-green-500 text-white hover:bg-green-600'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+          disabled={stocks.length === 0}
         >
           Go to Portfolio Page
         </button>

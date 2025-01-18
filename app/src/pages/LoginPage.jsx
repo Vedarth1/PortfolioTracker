@@ -1,16 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const email = formData.get("email");
     const password = formData.get("password");
+
+    setLoading(true);
 
     try {
       const response = await fetch("http://localhost:8080/api/auth/login", {
@@ -33,7 +36,9 @@ const LoginPage = () => {
           autoClose: 3000,
         });
 
-        setTimeout(() => navigate("/stocks"), 3000);
+        setTimeout(() => {
+          navigate("/stocks");
+        }, 3000);
       } else {
         const errorData = await response.json();
         toast.error(errorData.message || "Login failed", {
@@ -47,6 +52,8 @@ const LoginPage = () => {
         position: "top-right",
         autoClose: 3000,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,9 +102,14 @@ const LoginPage = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-300"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 flex items-center justify-center"
+            disabled={loading}
           >
-            Sign In
+            {loading ? (
+              <div className="animate-spin border-2 border-t-2 border-white rounded-full w-5 h-5"></div>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
         <p className="text-sm text-gray-600 text-center mt-4">

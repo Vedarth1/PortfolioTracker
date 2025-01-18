@@ -13,7 +13,6 @@ const SignupPage = () => {
     const email = formData.get("email");
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
-
     if (password !== confirmPassword) {
       toast.error("Passwords do not match!", {
         position: "top-right",
@@ -28,7 +27,7 @@ const SignupPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password ,confirmPassword}),
       });
 
       if (response.ok) {
