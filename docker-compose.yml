@@ -31,5 +31,17 @@ services:
       timeout: 10s
       retries: 3
 
+  frontend:
+    build:
+      context: ./app
+      dockerfile: ../Dockerfile.frontend
+    container_name: portfolio_frontend
+    ports:
+      - "5172:5172"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080/api
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
