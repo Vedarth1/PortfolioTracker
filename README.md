@@ -92,6 +92,12 @@ Build and Run the Backend:
   mvn spring-boot:run
 ```
 
+## Using Docker
+
+```bash
+  docker-compose up --build
+```
+
 # Swagger Access
 
 http://localhost:8080/swagger-ui/index.html
