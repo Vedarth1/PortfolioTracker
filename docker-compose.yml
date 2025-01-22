@@ -34,7 +34,7 @@ services:
     ports:
       - "5172:5172"
     environment:
-      VITE_API_BASE_URL: http://40.81.21.160:8080/api
+      VITE_API_BASE_URL: http://65.2.81.186:8080/api
     depends_on:
       - app
 
