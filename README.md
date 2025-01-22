@@ -114,3 +114,8 @@ http://localhost:8080/swagger-ui/index.html
 - Portfolio Dashboard
     - GET /api/portfolio/value: Get the total value of the portfolio.
     - GET /api/portfolio/dashboard: Retrieve stock distribution and profit/loss data.
+
+# Project Live
+
+- Project:- http://65.2.81.186:5172/
+- Api Swagger:- http://65.2.81.186:8080/swagger-ui/index.html
